@@ -20,7 +20,7 @@
     "hreflang",
     "server-side-rendering"
   ],
-  "author": "Your Name <your@email.com>",
+  "author": "tonmoy1996",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -79,7 +79,7 @@
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "clean": "rm -rf dist",
-    "demo": "tsx examples/dev-server.tsx"
+    "demo": "tsx examples/dev-server/server.tsx"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
