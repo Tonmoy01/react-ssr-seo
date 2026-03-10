@@ -1,0 +1,108 @@
+{
+  "name": "react-ssr-seo",
+  "version": "1.0.0",
+  "description": "Framework-agnostic SEO utilities, metadata builders, structured data helpers, and React components for SSR applications",
+  "keywords": [
+    "seo",
+    "react",
+    "ssr",
+    "nextjs",
+    "react-router",
+    "metadata",
+    "open-graph",
+    "json-ld",
+    "structured-data",
+    "canonical",
+    "robots",
+    "twitter-card",
+    "schema-org",
+    "breadcrumb",
+    "hreflang",
+    "server-side-rendering"
+  ],
+  "author": "Your Name <your@email.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tonmoy01/react-ssr-seo.git"
+  },
+  "homepage": "https://github.com/Tonmoy01/react-ssr-seo#readme",
+  "bugs": {
+    "url": "https://github.com/Tonmoy01/react-ssr-seo/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./schema": {
+      "import": {
+        "types": "./dist/schema.d.ts",
+        "default": "./dist/schema.js"
+      },
+      "require": {
+        "types": "./dist/schema.d.cts",
+        "default": "./dist/schema.cjs"
+      }
+    },
+    "./components": {
+      "import": {
+        "types": "./dist/components.d.ts",
+        "default": "./dist/components.js"
+      },
+      "require": {
+        "types": "./dist/components.d.cts",
+        "default": "./dist/components.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "clean": "rm -rf dist",
+    "demo": "tsx examples/dev-server.tsx"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": false
+    }
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.2.3",
+    "express": "^5.2.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.2.4",
+    "tsup": "^8.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
