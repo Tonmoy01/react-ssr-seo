@@ -17,27 +17,10 @@ import {
   buildTwitterMetadata,
   createArticleSchema,
   createBreadcrumbSchema,
-  createSEOConfig,
   mergeSEOConfig,
   safeJsonLdSerialize,
 } from "react-ssr-seo";
-
-// ─── Site-wide defaults ───────────────────────────────────────
-
-const siteConfig = createSEOConfig({
-  titleTemplate: "%s | Acme Blog",
-  description: "Acme Blog — Insights on technology and design.",
-  canonical: "https://acme.com",
-  openGraph: {
-    siteName: "Acme Blog",
-    type: "website",
-    locale: "en_US",
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: "@acmeblog",
-  },
-});
+import { siteConfig, SITE_URL } from "../../../config/seo.js";
 
 // ─── Page-level metadata (Next.js generateMetadata) ──────────
 
@@ -49,18 +32,18 @@ export async function generateMetadata(): Promise<Metadata> {
     slug: "understanding-rsc",
     publishedAt: "2025-06-15",
     author: "Jane Doe",
-    image: "https://acme.com/images/rsc-article.jpg",
+    image: `${SITE_URL}/images/rsc-article.jpg`,
   };
 
   const pageConfig = mergeSEOConfig(siteConfig, {
     title: article.title,
     description: article.description,
-    canonical: buildCanonicalUrl("https://acme.com", `/blog/${article.slug}`),
+    canonical: buildCanonicalUrl(SITE_URL, `/blog/${article.slug}`),
     openGraph: {
       title: article.title,
       description: article.description,
       type: "article",
-      url: buildCanonicalUrl("https://acme.com", `/blog/${article.slug}`),
+      url: buildCanonicalUrl(SITE_URL, `/blog/${article.slug}`),
       images: [
         {
           url: article.image,
@@ -109,18 +92,18 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function ArticlePage() {
   const articleSchema = createArticleSchema({
     headline: "Understanding React Server Components",
-    url: "https://acme.com/blog/understanding-rsc",
+    url: `${SITE_URL}/blog/understanding-rsc`,
     description: "A deep dive into RSC architecture.",
     datePublished: "2025-06-15",
-    author: { name: "Jane Doe", url: "https://acme.com/authors/jane" },
-    publisher: { name: "Acme Blog", logo: "https://acme.com/logo.png" },
-    images: ["https://acme.com/images/rsc-article.jpg"],
+    author: { name: "Jane Doe", url: `${SITE_URL}/authors/jane` },
+    publisher: { name: "Acme Blog", logo: `${SITE_URL}/logo.png` },
+    images: [`${SITE_URL}/images/rsc-article.jpg`],
   });
 
   const breadcrumbSchema = createBreadcrumbSchema([
-    { name: "Home", url: "https://acme.com" },
-    { name: "Blog", url: "https://acme.com/blog" },
-    { name: "Understanding RSC", url: "https://acme.com/blog/understanding-rsc" },
+    { name: "Home", url: SITE_URL },
+    { name: "Blog", url: `${SITE_URL}/blog` },
+    { name: "Understanding RSC", url: `${SITE_URL}/blog/understanding-rsc` },
   ]);
 
   return (
