@@ -2,7 +2,7 @@
 
 <br />
 
-<img src="https://img.shields.io/badge/react--ssr--seo-v1.0.0-000000?style=for-the-badge&labelColor=000000" alt="react-ssr-seo" />
+<img src="https://img.shields.io/badge/react--ssr--seo-v1.0.1-000000?style=for-the-badge&labelColor=000000" alt="react-ssr-seo" />
 
 <br />
 <br />
@@ -29,7 +29,7 @@ All in one package. Zero dependencies. Fully typed. SSR-safe.
 
 <br />
 
-[Get Started](#-get-started) &nbsp;&nbsp;|&nbsp;&nbsp; [Examples](#-real-world-examples) &nbsp;&nbsp;|&nbsp;&nbsp; [API](#-api-reference) &nbsp;&nbsp;|&nbsp;&nbsp; [Frameworks](#-framework-integration)
+[Live Demo](https://react-ssr-seo.tonmoykhan.site/) &nbsp;&nbsp;|&nbsp;&nbsp; [Get Started](#-get-started) &nbsp;&nbsp;|&nbsp;&nbsp; [Examples](#-real-world-examples) &nbsp;&nbsp;|&nbsp;&nbsp; [API](#-api-reference) &nbsp;&nbsp;|&nbsp;&nbsp; [Frameworks](#-framework-integration)
 
 <br />
 
