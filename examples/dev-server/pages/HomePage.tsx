@@ -72,9 +72,10 @@ export function HomePage() {
               API Reference
             </a>
           </div>
-          <div className="hero-install">
+          <div className="hero-install" data-copy="npm install react-ssr-seo" title="Click to copy">
             <span className="prompt">$</span>
-            npm install react-ssr-seo
+            <span>npm install react-ssr-seo</span>
+            <span className="copy-hint">click to copy</span>
           </div>
         </div>
       </section>

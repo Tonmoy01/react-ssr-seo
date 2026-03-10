@@ -178,6 +178,17 @@ const CLIENT_NAV_SCRIPT = `
   window.addEventListener('popstate', function() {
     navigate(location.pathname);
   });
+
+  // Copy to clipboard for [data-copy] elements
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-copy]');
+    if (!el) return;
+    var text = el.getAttribute('data-copy');
+    navigator.clipboard.writeText(text).then(function() {
+      el.classList.add('copied');
+      setTimeout(function() { el.classList.remove('copied'); }, 2000);
+    });
+  });
 })();
 `;
 
@@ -427,7 +438,9 @@ body {
 
 .hero-install {
   margin-top: 2.5rem;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   background: rgba(0,0,0,0.3);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
@@ -435,9 +448,34 @@ body {
   font-family: var(--font-mono);
   font-size: 0.9rem;
   color: #a5b4fc;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
 }
 
-.hero-install .prompt { color: #67e8f9; margin-right: 0.5rem; }
+.hero-install:hover { border-color: rgba(255,255,255,0.25); background: rgba(0,0,0,0.4); }
+
+.hero-install .prompt { color: #67e8f9; }
+
+.hero-install .copy-hint {
+  color: rgba(255,255,255,0.4);
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  margin-left: 0.5rem;
+  transition: opacity 0.2s;
+}
+
+.hero-install:hover .copy-hint { color: rgba(255,255,255,0.6); }
+
+.hero-install.copied .copy-hint { display: none; }
+
+.hero-install.copied::after {
+  content: 'Copied!';
+  color: #34d399;
+  font-size: 0.75rem;
+  font-family: var(--font-sans);
+  margin-left: 0.5rem;
+}
 
 /* ── Page Header ───────────────────────────────────── */
 .page-header {
