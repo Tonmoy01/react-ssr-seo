@@ -2,7 +2,7 @@
 
 <br />
 
-<img src="https://img.shields.io/badge/react--ssr--seo--toolkit-v1.0.2-000000?style=for-the-badge&labelColor=000000" alt="react-ssr-seo-toolkit" />
+<img src="https://img.shields.io/badge/react--ssr--seo--toolkit-v1.0.4-000000?style=for-the-badge&labelColor=000000" alt="react-ssr-seo-toolkit" />
 
 <br />
 <br />
@@ -98,56 +98,118 @@ All in one package. Zero dependencies. Fully typed. SSR-safe.
 npm install react-ssr-seo-toolkit
 ```
 
-```bash
-# or
-pnpm add react-ssr-seo-toolkit    # yarn add react-ssr-seo-toolkit    # bun add react-ssr-seo-toolkit
-```
-
-> **Requires:** `react >= 18.0.0` as peer dependency
+> **Requires:** `react >= 18.0.0` as a peer dependency. Zero other dependencies.
 
 <br />
 
-### 2. Create Site Config (once)
+### 2. Project Structure
+
+The key idea: **pages never write `<html>` or `<head>` tags** — that's handled by a Document component, just like in Next.js or any modern React framework.
+
+```
+my-app/
+├── config/
+│   └── seo.ts              ← site-wide SEO defaults
+├── components/
+│   └── Document.tsx         ← handles <html>, <head>, <SEOHead>, <body>
+├── pages/
+│   ├── HomePage.tsx         ← just content + SEO config (no <html> tags!)
+│   ├── AboutPage.tsx
+│   └── BlogPost.tsx
+├── server.tsx               ← Express / SSR entry point
+└── package.json
+```
+
+<br />
+
+### 3. Create Site Config (once)
+
+This file holds defaults that every page inherits. Pages override only what they need.
 
 ```tsx
+// config/seo.ts
 import { createSEOConfig } from "react-ssr-seo-toolkit";
 
-const siteConfig = createSEOConfig({
+export const siteConfig = createSEOConfig({
   titleTemplate: "%s | MySite",              // auto-appends " | MySite" to every page title
-  openGraph: { siteName: "MySite", type: "website" },
+  description: "Default site description for SEO.",
+  openGraph: { siteName: "MySite", type: "website", locale: "en_US" },
   twitter: { card: "summary_large_image", site: "@mysite" },
 });
+
+export const SITE_URL = "https://mysite.com";
 ```
+
+> **Tip:** `titleTemplate` uses `%s` as a placeholder. Setting `title: "About"` renders as `About | MySite`.
 
 <br />
 
-### 3. Add to Any Page
+### 3.5. Create a Document Component
+
+The Document handles `<html>`, `<head>`, `<SEOHead>`, and `<body>` — so pages never have to.
 
 ```tsx
-import { SEOHead, mergeSEOConfig, buildCanonicalUrl } from "react-ssr-seo-toolkit";
+// components/Document.tsx
+import { SEOHead, JsonLd } from "react-ssr-seo-toolkit";
+import type { SEOConfig } from "react-ssr-seo-toolkit";
 
-function AboutPage() {
-  const seo = mergeSEOConfig(siteConfig, {
-    title: "About Us",
-    description: "Learn about our company and mission.",
-    canonical: buildCanonicalUrl("https://mysite.com", "/about"),
-  });
+interface DocumentProps {
+  children: React.ReactNode;
+  seo: SEOConfig;
+  schemas?: Record<string, unknown>[];
+}
 
+export function Document({ children, seo, schemas }: DocumentProps) {
   return (
-    <html>
+    <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.ico" />
         <SEOHead {...seo} />
-        {/* Renders: <title>, <meta>, <link>, <script type="application/ld+json"> */}
+        {schemas?.map((schema, i) => <JsonLd key={i} data={schema} />)}
       </head>
       <body>
-        <h1>About Us</h1>
+        <nav>{/* shared navigation */}</nav>
+        <main>{children}</main>
+        <footer>{/* shared footer */}</footer>
       </body>
     </html>
   );
 }
 ```
 
-**Done.** That's all you need for basic SEO. Keep reading for real-world examples.
+> This is the same pattern used by Next.js (`layout.tsx`), Remix (`root.tsx`), and React Router's root component. We call it `Document` to distinguish it from route-level layouts.
+
+<br />
+
+### 4. Add to Any Page
+
+Merge the shared config with page-specific values. **No `<html>` or `<head>` tags needed** — the Document handles that.
+
+```tsx
+// pages/AboutPage.tsx
+import { mergeSEOConfig, buildCanonicalUrl } from "react-ssr-seo-toolkit";
+import { siteConfig, SITE_URL } from "../config/seo";
+import { Document } from "../components/Document";
+
+export function AboutPage() {
+  const seo = mergeSEOConfig(siteConfig, {
+    title: "About Us",
+    description: "Learn about our company and mission.",
+    canonical: buildCanonicalUrl(SITE_URL, "/about"),
+  });
+
+  return (
+    <Document seo={seo}>
+      <h1>About Us</h1>
+      <p>Our story...</p>
+    </Document>
+  );
+}
+```
+
+**That's it.** You now have full SEO on every page. Keep reading for structured data and framework examples.
 
 <br />
 
@@ -164,25 +226,20 @@ function AboutPage() {
 ### Blog / Article Page
 
 ```tsx
+// pages/BlogPost.tsx
 import {
-  SEOHead, JsonLd,
-  createSEOConfig, mergeSEOConfig, buildCanonicalUrl,
+  mergeSEOConfig, buildCanonicalUrl,
   createArticleSchema, createBreadcrumbSchema,
 } from "react-ssr-seo-toolkit";
+import { siteConfig, SITE_URL } from "../config/seo";
+import { Document } from "../components/Document";
 
-// Site config (create once, reuse everywhere)
-const siteConfig = createSEOConfig({
-  titleTemplate: "%s | My Blog",
-  openGraph: { siteName: "My Blog", type: "website" },
-  twitter: { card: "summary_large_image", site: "@myblog" },
-});
-
-function BlogPostPage() {
+export function BlogPostPage() {
   // ── Page SEO ──────────────────────────────────────────────
   const seo = mergeSEOConfig(siteConfig, {
     title: "How to Build an SSR App",
     description: "A complete guide to building server-rendered React apps with proper SEO.",
-    canonical: buildCanonicalUrl("https://myblog.com", "/blog/ssr-guide"),
+    canonical: buildCanonicalUrl(SITE_URL, "/blog/ssr-guide"),
     openGraph: {
       title: "How to Build an SSR App",
       description: "A complete guide to SSR with React.",
@@ -224,26 +281,21 @@ function BlogPostPage() {
     { name: "How to Build an SSR App", url: "https://myblog.com/blog/ssr-guide" },
   ]);
 
-  // ── Render ────────────────────────────────────────────────
+  // ── Render — no <html> or <head> tags! ────────────────────
   return (
-    <html>
-      <head>
-        <SEOHead {...seo} />
-        <JsonLd data={article} />
-        <JsonLd data={breadcrumbs} />
-      </head>
-      <body>
-        <article>
-          <h1>How to Build an SSR App</h1>
-          <p>Your article content here...</p>
-        </article>
-      </body>
-    </html>
+    <Document seo={seo} schemas={[article, breadcrumbs]}>
+      <article>
+        <h1>How to Build an SSR App</h1>
+        <p>Your article content here...</p>
+      </article>
+    </Document>
   );
 }
 ```
 
-**HTML output this generates:**
+<br />
+
+### Generated HTML Output
 
 ```html
 <head>
@@ -251,35 +303,23 @@ function BlogPostPage() {
   <title>How to Build an SSR App | My Blog</title>
   <meta name="description" content="A complete guide to building server-rendered React apps..." />
   <link rel="canonical" href="https://myblog.com/blog/ssr-guide" />
-  <meta name="robots" content="index, follow" />
 
-  <!-- Open Graph (Facebook, LinkedIn, etc.) -->
+  <!-- Open Graph -->
   <meta property="og:title" content="How to Build an SSR App" />
   <meta property="og:description" content="A complete guide to SSR with React." />
   <meta property="og:type" content="article" />
   <meta property="og:url" content="https://myblog.com/blog/ssr-guide" />
   <meta property="og:site_name" content="My Blog" />
   <meta property="og:image" content="https://myblog.com/images/ssr-guide.jpg" />
-  <meta property="og:image:width" content="1200" />
-  <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="SSR Guide Cover" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="@myblog" />
-  <meta name="twitter:creator" content="@authorhandle" />
   <meta name="twitter:title" content="How to Build an SSR App" />
-  <meta name="twitter:image" content="https://myblog.com/images/ssr-guide.jpg" />
 
-  <!-- JSON-LD: Article -->
-  <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"Article","headline":"How to Build an SSR App",...}
-  </script>
-
-  <!-- JSON-LD: Breadcrumbs -->
-  <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[...]}
-  </script>
+  <!-- JSON-LD -->
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article",...}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList",...}</script>
 </head>
 ```
 
@@ -293,16 +333,11 @@ function BlogPostPage() {
 
 ```tsx
 import {
-  SEOHead, JsonLd,
-  createSEOConfig, mergeSEOConfig, buildCanonicalUrl,
-  createProductSchema, createBreadcrumbSchema,
+  mergeSEOConfig, buildCanonicalUrl,
+  createProductSchema,
 } from "react-ssr-seo-toolkit";
-
-const siteConfig = createSEOConfig({
-  titleTemplate: "%s | Acme Store",
-  openGraph: { siteName: "Acme Store", type: "website" },
-  twitter: { card: "summary_large_image", site: "@acmestore" },
-});
+import { siteConfig, SITE_URL } from "../config/seo";
+import { Document } from "../components/Document";
 
 function ProductPage() {
   const product = {
@@ -317,9 +352,8 @@ function ProductPage() {
     reviewCount: 342,
   };
 
-  const url = buildCanonicalUrl("https://acmestore.com", "/products/ergonomic-keyboard");
+  const url = buildCanonicalUrl(SITE_URL, "/products/ergonomic-keyboard");
 
-  // ── Page SEO ──────────────────────────────────────────────
   const seo = mergeSEOConfig(siteConfig, {
     title: product.name,
     description: product.description,
@@ -333,7 +367,6 @@ function ProductPage() {
     },
   });
 
-  // ── Structured Data ───────────────────────────────────────
   const schema = createProductSchema({
     name: product.name,
     url,
@@ -348,25 +381,11 @@ function ProductPage() {
     reviewCount: product.reviewCount,
   });
 
-  const breadcrumbs = createBreadcrumbSchema([
-    { name: "Home", url: "https://acmestore.com" },
-    { name: "Products", url: "https://acmestore.com/products" },
-    { name: product.name, url },
-  ]);
-
   return (
-    <html>
-      <head>
-        <SEOHead {...seo} />
-        <JsonLd data={schema} />
-        <JsonLd data={breadcrumbs} />
-      </head>
-      <body>
-        <h1>{product.name}</h1>
-        <p>{product.description}</p>
-        <p>${product.price} — {product.inStock ? "In Stock" : "Out of Stock"}</p>
-      </body>
-    </html>
+    <Document seo={seo} schemas={[schema]}>
+      <h1>{product.name}</h1>
+      <p>${product.price}</p>
+    </Document>
   );
 }
 ```
@@ -381,9 +400,10 @@ function ProductPage() {
 
 ```tsx
 import {
-  SEOHead, JsonLd,
   mergeSEOConfig, buildCanonicalUrl, createFAQSchema,
 } from "react-ssr-seo-toolkit";
+import { siteConfig, SITE_URL } from "../config/seo";
+import { Document } from "../components/Document";
 
 function FAQPage() {
   const faqs = [
@@ -395,25 +415,19 @@ function FAQPage() {
   const seo = mergeSEOConfig(siteConfig, {
     title: "FAQ",
     description: "Frequently asked questions about our products and services.",
-    canonical: buildCanonicalUrl("https://mysite.com", "/faq"),
+    canonical: buildCanonicalUrl(SITE_URL, "/faq"),
   });
 
   return (
-    <html>
-      <head>
-        <SEOHead {...seo} />
-        <JsonLd data={createFAQSchema(faqs)} />
-      </head>
-      <body>
-        <h1>Frequently Asked Questions</h1>
-        {faqs.map((faq, i) => (
-          <details key={i}>
-            <summary>{faq.question}</summary>
-            <p>{faq.answer}</p>
-          </details>
-        ))}
-      </body>
-    </html>
+    <Document seo={seo} schemas={[createFAQSchema(faqs)]}>
+      <h1>Frequently Asked Questions</h1>
+      {faqs.map((faq, i) => (
+        <details key={i}>
+          <summary>{faq.question}</summary>
+          <p>{faq.answer}</p>
+        </details>
+      ))}
+    </Document>
   );
 }
 ```
@@ -428,10 +442,11 @@ function FAQPage() {
 
 ```tsx
 import {
-  SEOHead, JsonLd,
   mergeSEOConfig,
   createOrganizationSchema, createWebsiteSchema,
 } from "react-ssr-seo-toolkit";
+import { siteConfig } from "../config/seo";
+import { Document } from "../components/Document";
 
 function HomePage() {
   const seo = mergeSEOConfig(siteConfig, {
@@ -471,16 +486,9 @@ function HomePage() {
   });
 
   return (
-    <html>
-      <head>
-        <SEOHead {...seo} />
-        <JsonLd data={org} />
-        <JsonLd data={site} />
-      </head>
-      <body>
-        <h1>Welcome to Acme</h1>
-      </body>
-    </html>
+    <Document seo={seo} schemas={[org, site]}>
+      <h1>Welcome to Acme</h1>
+    </Document>
   );
 }
 ```
@@ -501,7 +509,6 @@ const seo = mergeSEOConfig(siteConfig, {
     { hreflang: "en",        href: "https://mysite.com/en/products" },
     { hreflang: "es",        href: "https://mysite.com/es/products" },
     { hreflang: "fr",        href: "https://mysite.com/fr/products" },
-    { hreflang: "de",        href: "https://mysite.com/de/products" },
     { hreflang: "x-default", href: "https://mysite.com/products" },
   ],
 });
@@ -509,7 +516,6 @@ const seo = mergeSEOConfig(siteConfig, {
 // Generates:
 // <link rel="alternate" hreflang="en" href="https://mysite.com/en/products" />
 // <link rel="alternate" hreflang="es" href="https://mysite.com/es/products" />
-// <link rel="alternate" hreflang="fr" href="https://mysite.com/fr/products" />
 // ...
 ```
 
@@ -582,8 +588,6 @@ const combined = composeSchemas(
 
 ### Next.js App Router
 
-**Using with `generateMetadata()`**
-
 ```tsx
 // app/blog/[slug]/page.tsx
 import {
@@ -637,12 +641,11 @@ export default function BlogPost({ params }) {
 
 ### Next.js Pages Router
 
-**Using with `next/head`**
-
 ```tsx
-// pages/about.tsx
+// pages/about.tsx — no <html> tags, Next.js handles that
 import Head from "next/head";
 import { SEOHead, mergeSEOConfig } from "react-ssr-seo-toolkit";
+import { siteConfig } from "../config/seo";
 
 export default function AboutPage() {
   const seo = mergeSEOConfig(siteConfig, {
@@ -668,40 +671,49 @@ export default function AboutPage() {
 
 ### React Router 7 SSR
 
-**Using in root document**
-
 ```tsx
-// app/root.tsx
-import { SEOHead, JsonLd, createSEOConfig, mergeSEOConfig, createOrganizationSchema } from "react-ssr-seo-toolkit";
+// app/root.tsx — only the root layout writes <html>
+import { Outlet, useMatches } from "react-router";
+import { SEOHead } from "react-ssr-seo-toolkit";
 
-const siteConfig = createSEOConfig({
-  titleTemplate: "%s — Acme",
-  openGraph: { siteName: "Acme", type: "website", locale: "en_US" },
-  twitter: { card: "summary_large_image", site: "@acme" },
-});
-
-export function HomePage() {
-  const seo = mergeSEOConfig(siteConfig, {
-    title: "Home",
-    canonical: "https://acme.com",
-    jsonLd: createOrganizationSchema({
-      name: "Acme",
-      url: "https://acme.com",
-      logo: "https://acme.com/logo.png",
-    }),
-  });
+export default function Root() {
+  const matches = useMatches();
+  const seo = matches.at(-1)?.data?.seo;
 
   return (
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <SEOHead {...seo} />
+        {seo && <SEOHead {...seo} />}
       </head>
       <body>
-        <h1>Welcome to Acme</h1>
+        <Outlet />
       </body>
     </html>
+  );
+}
+```
+
+```tsx
+// app/routes/about.tsx — page just provides SEO data + content
+import { mergeSEOConfig, buildCanonicalUrl } from "react-ssr-seo-toolkit";
+import { siteConfig, SITE_URL } from "../config/seo";
+
+export function loader() {
+  return {
+    seo: mergeSEOConfig(siteConfig, {
+      title: "About",
+      canonical: buildCanonicalUrl(SITE_URL, "/about"),
+    }),
+  };
+}
+
+export default function AboutPage() {
+  return (
+    <main>
+      <h1>About Us</h1>
+    </main>
   );
 }
 ```
@@ -710,44 +722,19 @@ export function HomePage() {
 
 ### Express + React SSR
 
-**Using with `renderToString()`**
-
 ```tsx
+// server.tsx — renders page components that include Document internally
 import express from "express";
 import { renderToString } from "react-dom/server";
-import { SEOHead, JsonLd, createSEOConfig, mergeSEOConfig, createProductSchema } from "react-ssr-seo-toolkit";
+import { HomePage } from "./pages/HomePage";
+import { ProductPage } from "./pages/ProductPage";
 
 const app = express();
 
-const siteConfig = createSEOConfig({
-  titleTemplate: "%s | My Store",
-  openGraph: { siteName: "My Store" },
+app.get("/", (req, res) => {
+  const html = renderToString(<HomePage />);
+  res.send(`<!DOCTYPE html>${html}`);
 });
-
-function ProductPage({ product }) {
-  const seo = mergeSEOConfig(siteConfig, {
-    title: product.name,
-    description: product.description,
-    canonical: product.url,
-  });
-
-  return (
-    <html>
-      <head>
-        <SEOHead {...seo} />
-        <JsonLd data={createProductSchema({
-          name: product.name,
-          url: product.url,
-          price: product.price,
-        })} />
-      </head>
-      <body>
-        <h1>{product.name}</h1>
-        <p>${product.price}</p>
-      </body>
-    </html>
-  );
-}
 
 app.get("/products/:id", (req, res) => {
   const product = getProduct(req.params.id);
@@ -756,6 +743,34 @@ app.get("/products/:id", (req, res) => {
 });
 
 app.listen(3000);
+```
+
+```tsx
+// pages/ProductPage.tsx — no <html> tags, Document handles that
+import { mergeSEOConfig, createProductSchema } from "react-ssr-seo-toolkit";
+import { siteConfig } from "../config/seo";
+import { Document } from "../components/Document";
+
+export function ProductPage({ product }) {
+  const seo = mergeSEOConfig(siteConfig, {
+    title: product.name,
+    description: product.description,
+    canonical: product.url,
+  });
+
+  const schema = createProductSchema({
+    name: product.name,
+    url: product.url,
+    price: product.price,
+  });
+
+  return (
+    <Document seo={seo} schemas={[schema]}>
+      <h1>{product.name}</h1>
+      <p>${product.price}</p>
+    </Document>
+  );
+}
 ```
 
 <br />
@@ -768,161 +783,55 @@ app.listen(3000);
 
 ### Config Builders
 
-<table>
-<tr>
-<th>Function</th>
-<th>What It Does</th>
-</tr>
-<tr>
-<td><code>createSEOConfig(config?)</code></td>
-<td>Create a normalized SEO config. Use for site-wide defaults.</td>
-</tr>
-<tr>
-<td><code>mergeSEOConfig(base, override)</code></td>
-<td>Deep-merge site config with page-level overrides. Arrays are replaced, not concatenated.</td>
-</tr>
-<tr>
-<td><code>normalizeSEOConfig(config)</code></td>
-<td>Trim strings, normalize URLs, clean up a config object.</td>
-</tr>
-</table>
+| Function | What It Does |
+|---|---|
+| `createSEOConfig(config?)` | Create a normalized SEO config. Use for site-wide defaults. |
+| `mergeSEOConfig(base, override)` | Deep-merge site config with page-level overrides. Arrays are replaced, not concatenated. |
+| `normalizeSEOConfig(config)` | Trim strings, normalize URLs, clean up a config object. |
 
 <br />
 
 ### Metadata Helpers
 
-<table>
-<tr>
-<th>Function</th>
-<th>Example</th>
-<th>Result</th>
-</tr>
-<tr>
-<td><code>buildTitle(title, template)</code></td>
-<td><code>buildTitle("About", "%s | MySite")</code></td>
-<td><code>"About | MySite"</code></td>
-</tr>
-<tr>
-<td><code>buildDescription(desc, maxLen)</code></td>
-<td><code>buildDescription("Long text...", 160)</code></td>
-<td>Truncated at 160 chars with ellipsis</td>
-</tr>
-<tr>
-<td><code>buildCanonicalUrl(base, path)</code></td>
-<td><code>buildCanonicalUrl("https://x.com", "/about")</code></td>
-<td><code>"https://x.com/about"</code></td>
-</tr>
-<tr>
-<td><code>buildRobotsDirectives(config)</code></td>
-<td><code>buildRobotsDirectives({ index: false, follow: true })</code></td>
-<td><code>"noindex, follow"</code></td>
-</tr>
-<tr>
-<td><code>noIndex()</code></td>
-<td><code>noIndex()</code></td>
-<td><code>{ index: false, follow: true }</code></td>
-</tr>
-<tr>
-<td><code>noIndexNoFollow()</code></td>
-<td><code>noIndexNoFollow()</code></td>
-<td><code>{ index: false, follow: false }</code></td>
-</tr>
-<tr>
-<td><code>buildOpenGraph(config)</code></td>
-<td><code>buildOpenGraph({ title: "Hi" })</code></td>
-<td><code>[{ property: "og:title", content: "Hi" }]</code></td>
-</tr>
-<tr>
-<td><code>buildTwitterMetadata(config)</code></td>
-<td><code>buildTwitterMetadata({ card: "summary" })</code></td>
-<td><code>[{ name: "twitter:card", content: "summary" }]</code></td>
-</tr>
-<tr>
-<td><code>buildAlternateLinks(alternates)</code></td>
-<td><code>buildAlternateLinks([{ hreflang: "en", href: "..." }])</code></td>
-<td><code>[{ rel: "alternate", hreflang: "en", href: "..." }]</code></td>
-</tr>
-</table>
+| Function | Example | Result |
+|---|---|---|
+| `buildTitle(title, template)` | `buildTitle("About", "%s \| MySite")` | `"About \| MySite"` |
+| `buildDescription(desc, maxLen)` | `buildDescription("Long text...", 160)` | Truncated at 160 chars |
+| `buildCanonicalUrl(base, path)` | `buildCanonicalUrl("https://x.com", "/about")` | `"https://x.com/about"` |
+| `buildRobotsDirectives(config)` | `buildRobotsDirectives({ index: false })` | `"noindex, follow"` |
+| `noIndex()` | `noIndex()` | `{ index: false, follow: true }` |
+| `noIndexNoFollow()` | `noIndexNoFollow()` | `{ index: false, follow: false }` |
+| `buildOpenGraph(config)` | `buildOpenGraph({ title: "Hi" })` | `[{ property: "og:title", content: "Hi" }]` |
+| `buildTwitterMetadata(config)` | `buildTwitterMetadata({ card: "summary" })` | `[{ name: "twitter:card", content: "summary" }]` |
+| `buildAlternateLinks(alternates)` | `buildAlternateLinks([{ hreflang: "en", href: "..." }])` | `[{ rel: "alternate", hreflang: "en", href: "..." }]` |
 
 <br />
 
 ### JSON-LD Schema Generators
 
-> All return a plain object with `@context: "https://schema.org"` and `@type` set.
+All return a plain object with `@context: "https://schema.org"` and `@type` set.
 
-<table>
-<tr>
-<th>Function</th>
-<th>Schema Type</th>
-<th>Use Case</th>
-</tr>
-<tr>
-<td><code>createOrganizationSchema(input)</code></td>
-<td>Organization</td>
-<td>Company info, logo, social links, contact</td>
-</tr>
-<tr>
-<td><code>createWebsiteSchema(input)</code></td>
-<td>WebSite</td>
-<td>Site name, sitelinks searchbox</td>
-</tr>
-<tr>
-<td><code>createArticleSchema(input)</code></td>
-<td>Article</td>
-<td>Blog posts, news articles, authors, dates</td>
-</tr>
-<tr>
-<td><code>createProductSchema(input)</code></td>
-<td>Product</td>
-<td>E-commerce: price, brand, SKU, ratings, availability</td>
-</tr>
-<tr>
-<td><code>createBreadcrumbSchema(items)</code></td>
-<td>BreadcrumbList</td>
-<td>Navigation hierarchy</td>
-</tr>
-<tr>
-<td><code>createFAQSchema(items)</code></td>
-<td>FAQPage</td>
-<td>FAQ pages with question + answer pairs</td>
-</tr>
-<tr>
-<td><code>composeSchemas(...schemas)</code></td>
-<td>@graph</td>
-<td>Combine multiple schemas into one JSON-LD block</td>
-</tr>
-</table>
+| Function | Schema Type | Use Case |
+|---|---|---|
+| `createOrganizationSchema(input)` | Organization | Company info, logo, social links, contact |
+| `createWebsiteSchema(input)` | WebSite | Site name, sitelinks searchbox |
+| `createArticleSchema(input)` | Article | Blog posts, news articles, authors, dates |
+| `createProductSchema(input)` | Product | E-commerce: price, brand, SKU, ratings, availability |
+| `createBreadcrumbSchema(items)` | BreadcrumbList | Navigation hierarchy |
+| `createFAQSchema(items)` | FAQPage | FAQ pages with question + answer pairs |
+| `composeSchemas(...schemas)` | @graph | Combine multiple schemas into one JSON-LD block |
 
 <br />
 
 ### Utilities
 
-<table>
-<tr>
-<th>Function</th>
-<th>What It Does</th>
-</tr>
-<tr>
-<td><code>safeJsonLdSerialize(data)</code></td>
-<td>Serialize JSON-LD safely for <code>&lt;script&gt;</code> tags — escapes <code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code> to prevent XSS</td>
-</tr>
-<tr>
-<td><code>normalizeUrl(url)</code></td>
-<td>Trim whitespace, remove trailing slashes</td>
-</tr>
-<tr>
-<td><code>buildFullUrl(base, path?)</code></td>
-<td>Combine base URL with path</td>
-</tr>
-<tr>
-<td><code>omitEmpty(obj)</code></td>
-<td>Remove keys with <code>undefined</code>, <code>null</code>, or empty string values</td>
-</tr>
-<tr>
-<td><code>deepMerge(base, override)</code></td>
-<td>Deep-merge two objects (arrays replaced, not concatenated)</td>
-</tr>
-</table>
+| Function | What It Does |
+|---|---|
+| `safeJsonLdSerialize(data)` | Serialize JSON-LD safely — escapes `<`, `>`, `&` to prevent XSS |
+| `normalizeUrl(url)` | Trim whitespace, remove trailing slashes |
+| `buildFullUrl(base, path?)` | Combine base URL with path |
+| `omitEmpty(obj)` | Remove keys with `undefined`, `null`, or empty string values |
+| `deepMerge(base, override)` | Deep-merge two objects (arrays replaced, not concatenated) |
 
 <br />
 
@@ -961,11 +870,9 @@ Renders all SEO tags as React elements. Place inside `<head>`.
   ]}
   additionalMetaTags={[
     { name: "author", content: "Jane Doe" },
-    { property: "article:published_time", content: "2025-06-15" },
   ]}
   additionalLinkTags={[
     { rel: "icon", href: "/favicon.ico" },
-    { rel: "apple-touch-icon", href: "/apple-touch-icon.png", sizes: "180x180" },
   ]}
   jsonLd={createArticleSchema({ headline: "...", url: "..." })}
 />
@@ -1013,49 +920,26 @@ import type {
 
 ## Live Demo
 
-Try it locally — the repo includes a **working Express SSR demo** with 5 pages:
+The repo includes a **working Express SSR demo** with every feature:
 
 ```bash
-git clone https://github.com/Tonmoy01/react-ssr-seo.git
-cd react-ssr-seo
+git clone https://github.com/Tonmoy01/react-ssr-seo-toolkit.git
+cd react-ssr-seo-toolkit
 npm install
 npm run demo
 ```
 
-Then open your browser:
+Then visit [http://localhost:3000](http://localhost:3000):
 
-<table>
-<tr>
-<th>URL</th>
-<th>Page</th>
-<th>SEO Features Demonstrated</th>
-</tr>
-<tr>
-<td><code>localhost:3000</code></td>
-<td>Home</td>
-<td>Organization + Website schema, hreflang, OG images</td>
-</tr>
-<tr>
-<td><code>localhost:3000/article</code></td>
-<td>Article</td>
-<td>Article schema, breadcrumbs, multiple authors, Twitter cards</td>
-</tr>
-<tr>
-<td><code>localhost:3000/product</code></td>
-<td>Product</td>
-<td>Product schema, pricing, ratings, availability, breadcrumbs</td>
-</tr>
-<tr>
-<td><code>localhost:3000/faq</code></td>
-<td>FAQ</td>
-<td>FAQPage schema with Q&A pairs</td>
-</tr>
-<tr>
-<td><code>localhost:3000/noindex</code></td>
-<td>No-Index</td>
-<td>Robots noindex directive</td>
-</tr>
-</table>
+| URL | Page | SEO Features |
+|---|---|---|
+| `/` | Home | Organization + Website schema, hreflang, OG images |
+| `/getting-started` | Getting Started | Installation guide with copy-paste examples |
+| `/article` | Article | Article schema, breadcrumbs, multiple authors, Twitter cards |
+| `/product` | Product | Product schema, pricing, ratings, availability |
+| `/faq` | FAQ | FAQPage schema with Q&A pairs |
+| `/noindex` | No-Index | Robots noindex directive |
+| `/api` | API Reference | Complete function and type documentation |
 
 > **Tip:** Right-click any page and **View Page Source** to see all SEO tags in the raw HTML.
 
@@ -1096,7 +980,7 @@ Ensure the package is installed and your bundler supports the `exports` field in
 
 ### JSON-LD not appearing in page source
 
-Make sure `<JsonLd>` or `<script type="application/ld+json">` is inside `<head>` and rendered during SSR — not in a client-only `useEffect`.
+Make sure `<JsonLd>` is inside `<head>` and rendered during SSR — not in a client-only `useEffect`.
 
 ### TypeScript errors
 

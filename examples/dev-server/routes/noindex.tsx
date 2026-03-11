@@ -1,23 +1,21 @@
 import React from "react";
-import {
-  mergeSEOConfig,
-  buildCanonicalUrl,
-  noIndex,
-  noIndexNoFollow,
-} from "../../../src/index.js";
+import { mergeSEOConfig, buildCanonicalUrl, noIndex, noIndexNoFollow } from "../../../src/index.js";
 import { siteConfig, SITE_URL } from "../config/seo.js";
-import { Document } from "../components/Document.js";
 
-export function NoIndexPage() {
-  const pageConfig = mergeSEOConfig(siteConfig, {
+export function meta() {
+  return mergeSEOConfig(siteConfig, {
     title: "Internal Page",
     description: "This page should not be indexed by search engines.",
     canonical: buildCanonicalUrl(SITE_URL, "/noindex"),
     robots: noIndex(),
   });
+}
 
+export const handle = { activeRoute: "/noindex" };
+
+export default function NoIndexPage() {
   return (
-    <Document pageConfig={pageConfig} activeRoute="/noindex">
+    <>
       <div className="page-header">
         <h1>No-Index Page Demo</h1>
         <p>
@@ -222,6 +220,6 @@ const archivePage = mergeSEOConfig(siteConfig, {
           </div>
         </div>
       </div>
-    </Document>
+    </>
   );
 }

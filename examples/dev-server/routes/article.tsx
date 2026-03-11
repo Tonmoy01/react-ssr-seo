@@ -6,10 +6,9 @@ import {
   createBreadcrumbSchema,
 } from "../../../src/index.js";
 import { siteConfig, SITE_URL } from "../config/seo.js";
-import { Document } from "../components/Document.js";
 
-export function ArticlePage() {
-  const pageConfig = mergeSEOConfig(siteConfig, {
+export function meta() {
+  return mergeSEOConfig(siteConfig, {
     title: "Understanding React Server Components",
     description:
       "A deep dive into React Server Components, how they work, and why they matter for modern web development.",
@@ -35,8 +34,11 @@ export function ArticlePage() {
       image: `${SITE_URL}/images/rsc.jpg`,
     },
   });
+}
 
-  const schemas = [
+export const handle = {
+  activeRoute: "/article",
+  schemas: [
     createArticleSchema({
       headline: "Understanding React Server Components",
       url: `${SITE_URL}/blog/react-server-components`,
@@ -60,21 +62,21 @@ export function ArticlePage() {
         url: `${SITE_URL}/blog/react-server-components`,
       },
     ]),
-  ];
+  ],
+};
 
+export default function ArticlePage() {
   return (
-    <Document pageConfig={pageConfig} schemas={schemas} activeRoute="/article">
-      <div className="page-header">
-        <h1>Article Page Demo</h1>
-        <p>
-          Article schema with multiple authors, breadcrumbs, OG article type, and Twitter creator card.
-        </p>
-        <div className="page-tags" style={{ marginTop: "0.75rem" }}>
-          <span className="tag">Article Schema</span>
-          <span className="tag">Breadcrumbs</span>
-          <span className="tag">Open Graph</span>
-          <span className="tag">Twitter Card</span>
-        </div>
+    <div className="page-header">
+      <h1>Article Page Demo</h1>
+      <p>
+        Article schema with multiple authors, breadcrumbs, OG article type, and Twitter creator card.
+      </p>
+      <div className="page-tags" style={{ marginTop: "0.75rem" }}>
+        <span className="tag">Article Schema</span>
+        <span className="tag">Breadcrumbs</span>
+        <span className="tag">Open Graph</span>
+        <span className="tag">Twitter Card</span>
       </div>
 
       <div className="narrow-container" style={{ paddingBottom: "4rem" }}>
@@ -307,6 +309,6 @@ const breadcrumb = createBreadcrumbSchema([
           </div>
         </div>
       </div>
-    </Document>
+    </div>
   );
 }

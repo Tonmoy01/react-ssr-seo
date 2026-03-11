@@ -1,18 +1,21 @@
 import React from "react";
 import { mergeSEOConfig, buildCanonicalUrl } from "../../../src/index.js";
 import { siteConfig, SITE_URL } from "../config/seo.js";
-import { Document } from "../components/Document.js";
 
-export function GettingStartedPage() {
-  const pageConfig = mergeSEOConfig(siteConfig, {
+export function meta() {
+  return mergeSEOConfig(siteConfig, {
     title: "Getting Started",
     description:
       "Learn how to install and use react-ssr-seo-toolkit to add complete SEO support to your React SSR application.",
     canonical: buildCanonicalUrl(SITE_URL, "/getting-started"),
   });
+}
 
+export const handle = { activeRoute: "/getting-started" };
+
+export default function GettingStartedPage() {
   return (
-    <Document pageConfig={pageConfig} activeRoute="/getting-started">
+    <>
       <div className="page-header">
         <h1>Getting Started</h1>
         <p>
@@ -499,6 +502,6 @@ export function BlogPost() {
           </div>
         </div>
       </div>
-    </Document>
+    </>
   );
 }

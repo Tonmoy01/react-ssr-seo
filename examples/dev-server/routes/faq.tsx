@@ -5,7 +5,6 @@ import {
   createFAQSchema,
 } from "../../../src/index.js";
 import { siteConfig, SITE_URL } from "../config/seo.js";
-import { Document } from "../components/Document.js";
 
 const faqs = [
   {
@@ -50,18 +49,20 @@ const faqs = [
   },
 ];
 
-export function FAQPage() {
-  const pageConfig = mergeSEOConfig(siteConfig, {
+export function meta() {
+  return mergeSEOConfig(siteConfig, {
     title: "FAQ",
     description:
       "Frequently asked questions about react-ssr-seo-toolkit — installation, framework support, schemas, and more.",
     canonical: buildCanonicalUrl(SITE_URL, "/faq"),
   });
+}
 
-  const schemas = [createFAQSchema(faqs)];
+export const handle = { activeRoute: "/faq", schemas: [createFAQSchema(faqs)] };
 
+export default function FAQPage() {
   return (
-    <Document pageConfig={pageConfig} schemas={schemas} activeRoute="/faq">
+    <>
       <div className="page-header">
         <h1>FAQ Page Demo</h1>
         <p>
@@ -235,6 +236,6 @@ const faqSchema = createFAQSchema(faqs);
           </div>
         </div>
       </div>
-    </Document>
+    </>
   );
 }

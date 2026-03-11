@@ -1,21 +1,21 @@
 import React from "react";
-import {
-  mergeSEOConfig,
-  buildCanonicalUrl,
-} from "../../../src/index.js";
+import { mergeSEOConfig, buildCanonicalUrl } from "../../../src/index.js";
 import { siteConfig, SITE_URL } from "../config/seo.js";
-import { Document } from "../components/Document.js";
 
-export function APIReferencePage() {
-  const pageConfig = mergeSEOConfig(siteConfig, {
+export function meta() {
+  return mergeSEOConfig(siteConfig, {
     title: "API Reference",
     description:
       "Complete API reference for react-ssr-seo-toolkit — all functions, components, types, and schema generators.",
     canonical: buildCanonicalUrl(SITE_URL, "/api"),
   });
+}
 
+export const handle = { activeRoute: "/api" };
+
+export default function APIReferencePage() {
   return (
-    <Document pageConfig={pageConfig} activeRoute="/api">
+    <>
       <div className="page-header">
         <h1>API Reference</h1>
         <p>
@@ -539,6 +539,6 @@ const schema = createArticleSchema({
           </div>
         </div>
       </div>
-    </Document>
+    </>
   );
 }

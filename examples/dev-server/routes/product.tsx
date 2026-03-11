@@ -6,26 +6,25 @@ import {
   createBreadcrumbSchema,
 } from "../../../src/index.js";
 import { siteConfig, SITE_URL } from "../config/seo.js";
-import { Document } from "../components/Document.js";
 
-export function ProductPage() {
-  const product = {
-    name: "Ergonomic Mechanical Keyboard",
-    slug: "ergonomic-keyboard",
-    description:
-      "Premium split mechanical keyboard with Cherry MX Brown switches. Designed for all-day comfort and maximum productivity.",
-    price: 189.99,
-    image: `${SITE_URL}/images/keyboard.jpg`,
-    brand: "Acme Peripherals",
-    sku: "ACME-KB-001",
-    inStock: true,
-    rating: 4.7,
-    reviewCount: 342,
-  };
+const product = {
+  name: "Ergonomic Mechanical Keyboard",
+  slug: "ergonomic-keyboard",
+  description:
+    "Premium split mechanical keyboard with Cherry MX Brown switches. Designed for all-day comfort and maximum productivity.",
+  price: 189.99,
+  image: `${SITE_URL}/images/keyboard.jpg`,
+  brand: "Acme Peripherals",
+  sku: "ACME-KB-001",
+  inStock: true,
+  rating: 4.7,
+  reviewCount: 342,
+};
 
-  const url = buildCanonicalUrl(SITE_URL, `/products/${product.slug}`);
+const url = buildCanonicalUrl(SITE_URL, `/products/${product.slug}`);
 
-  const pageConfig = mergeSEOConfig(siteConfig, {
+export function meta() {
+  return mergeSEOConfig(siteConfig, {
     title: product.name,
     description: product.description,
     canonical: url,
@@ -44,8 +43,11 @@ export function ProductPage() {
       image: product.image,
     },
   });
+}
 
-  const schemas = [
+export const handle = {
+  activeRoute: "/product",
+  schemas: [
     createProductSchema({
       name: product.name,
       url,
@@ -64,10 +66,12 @@ export function ProductPage() {
       { name: "Products", url: `${SITE_URL}/products` },
       { name: product.name, url },
     ]),
-  ];
+  ],
+};
 
+export default function ProductPage() {
   return (
-    <Document pageConfig={pageConfig} schemas={schemas} activeRoute="/product">
+    <>
       <div className="page-header">
         <h1>Product Page Demo</h1>
         <p>
@@ -288,6 +292,6 @@ const breadcrumb = createBreadcrumbSchema([
           </div>
         </div>
       </div>
-    </Document>
+    </>
   );
 }

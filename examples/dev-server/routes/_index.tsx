@@ -5,10 +5,10 @@ import {
   createWebsiteSchema,
 } from "../../../src/index.js";
 import { siteConfig, SITE_URL } from "../config/seo.js";
-import { Document } from "../components/Document.js";
 
-export function HomePage() {
-  const pageConfig = mergeSEOConfig(siteConfig, {
+// meta function
+export function meta() {
+  return mergeSEOConfig(siteConfig, {
     title: "Home",
     canonical: SITE_URL,
     openGraph: {
@@ -29,8 +29,11 @@ export function HomePage() {
       { hreflang: "fr", href: `${SITE_URL}/fr` },
     ],
   });
+}
 
-  const schemas = [
+export const handle = {
+  activeRoute: "/",
+  schemas: [
     createOrganizationSchema({
       name: "react-ssr-seo-toolkit",
       url: SITE_URL,
@@ -46,10 +49,12 @@ export function HomePage() {
       description: "Framework-agnostic SEO utilities for React SSR applications.",
       searchUrl: `${SITE_URL}/search`,
     }),
-  ];
+  ],
+};
 
+export default function HomePage() {
   return (
-    <Document pageConfig={pageConfig} schemas={schemas} activeRoute="/">
+    <>
       {/* Hero */}
       <section className="hero">
         <div className="hero-inner">
@@ -416,6 +421,6 @@ export function BlogPost() {
           </div>
         </div>
       </section>
-    </Document>
+    </>
   );
 }

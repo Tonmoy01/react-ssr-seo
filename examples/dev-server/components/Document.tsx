@@ -1,7 +1,7 @@
 import React from "react";
 import { SEOHead, JsonLd, createSEOConfig } from "../../../src/index.js";
 
-interface LayoutProps {
+interface DocumentProps {
   children: React.ReactNode;
   pageConfig: ReturnType<typeof createSEOConfig>;
   schemas?: Record<string, unknown>[];
@@ -11,14 +11,15 @@ interface LayoutProps {
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/getting-started", label: "Getting Started" },
-  { href: "/article", label: "Article" },
-  { href: "/product", label: "Product" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/noindex", label: "No-Index" },
+  { href: "/react-guide", label: "React Guide" },
+  { href: "/nextjs-guide", label: "Next.js Guide" },
+  { href: "/multi-page", label: "Multi-Page" },
+  { href: "/recipes", label: "Recipes" },
+  { href: "/common-mistakes", label: "Mistakes & FAQ" },
   { href: "/api", label: "API Reference" },
 ];
 
-export function Layout({ children, pageConfig, schemas, activeRoute }: LayoutProps) {
+export function Document({ children, pageConfig, schemas, activeRoute }: DocumentProps) {
   return (
     <html lang="en">
       <head>
@@ -55,7 +56,7 @@ export function Layout({ children, pageConfig, schemas, activeRoute }: LayoutPro
                 ))}
               </div>
               <a
-                href="https://github.com/Tonmoy01/react-ssr-seo"
+                href="https://github.com/Tonmoy01/react-ssr-seo-toolkit"
                 className="nav-github"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -80,21 +81,27 @@ export function Layout({ children, pageConfig, schemas, activeRoute }: LayoutPro
                   </p>
                 </div>
                 <div className="footer-col">
-                  <h4 className="footer-heading">Demo Pages</h4>
+                  <h4 className="footer-heading">Documentation</h4>
+                  <div className="footer-links">
+                    <a href="/getting-started">Getting Started</a>
+                    <a href="/react-guide">React Guide</a>
+                    <a href="/nextjs-guide">Next.js Guide</a>
+                    <a href="/multi-page">Multi-Page Usage</a>
+                    <a href="/recipes">Recipes</a>
+                    <a href="/common-mistakes">Common Mistakes</a>
+                    <a href="/faq-docs">FAQ</a>
+                    <a href="/api">API Reference</a>
+                  </div>
+                </div>
+                <div className="footer-col">
+                  <h4 className="footer-heading">Live Demos</h4>
                   <div className="footer-links">
                     <a href="/article">Article SEO</a>
                     <a href="/product">Product SEO</a>
                     <a href="/faq">FAQ Schema</a>
                     <a href="/noindex">No-Index</a>
-                  </div>
-                </div>
-                <div className="footer-col">
-                  <h4 className="footer-heading">Resources</h4>
-                  <div className="footer-links">
-                    <a href="/getting-started">Getting Started</a>
-                    <a href="/api">API Reference</a>
-                    <a href="https://github.com/Tonmoy01/react-ssr-seo" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
-                    <a href="https://www.npmjs.com/package/react-ssr-seo-toolkit" target="_blank" rel="noopener noreferrer">npm Package</a>
+                    <a href="https://github.com/Tonmoy01/react-ssr-seo-toolkit" target="_blank" rel="noopener noreferrer">GitHub</a>
+                    <a href="https://www.npmjs.com/package/react-ssr-seo-toolkit" target="_blank" rel="noopener noreferrer">npm</a>
                   </div>
                 </div>
               </div>
@@ -116,6 +123,34 @@ export function Layout({ children, pageConfig, schemas, activeRoute }: LayoutPro
 /* ── Client-side navigation (PJAX-style) ────────────────────── */
 const CLIENT_NAV_SCRIPT = `
 (function() {
+  // Inject copy buttons into all code blocks
+  function addCopyButtons() {
+    var blocks = document.querySelectorAll('.code-block');
+    blocks.forEach(function(block) {
+      if (block.querySelector('.copy-btn')) return;
+      var header = block.querySelector('.code-header');
+      if (!header) return;
+      var btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.textContent = 'Copy';
+      btn.setAttribute('aria-label', 'Copy code to clipboard');
+      btn.addEventListener('click', function() {
+        var pre = block.querySelector('pre');
+        if (!pre) return;
+        var text = pre.textContent || '';
+        navigator.clipboard.writeText(text).then(function() {
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.textContent = 'Copy';
+            btn.classList.remove('copied');
+          }, 2000);
+        });
+      });
+      header.appendChild(btn);
+    });
+  }
+
   function navigate(url) {
     fetch(url)
       .then(function(r) { return r.text(); })
@@ -141,6 +176,9 @@ const CLIENT_NAV_SCRIPT = `
 
         // Scroll to top
         window.scrollTo(0, 0);
+
+        // Re-inject copy buttons after content swap
+        addCopyButtons();
       });
   }
 
@@ -189,6 +227,9 @@ const CLIENT_NAV_SCRIPT = `
       setTimeout(function() { el.classList.remove('copied'); }, 2000);
     });
   });
+
+  // Initialize copy buttons on first load
+  addCopyButtons();
 })();
 `;
 
@@ -291,7 +332,9 @@ body {
   gap: 0.25rem;
   flex: 1;
   overflow-x: auto;
+  scrollbar-width: none;
 }
+.nav-links::-webkit-scrollbar { display: none; }
 
 .nav-link {
   color: #cbd5e1;
@@ -647,6 +690,59 @@ body {
   border-radius: 4px;
   text-transform: uppercase;
   font-weight: 600;
+}
+
+.copy-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #94a3b8;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: auto;
+}
+
+.copy-btn:hover {
+  background: rgba(255,255,255,0.15);
+  color: #e2e8f0;
+  border-color: rgba(255,255,255,0.25);
+}
+
+.copy-btn.copied {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+/* ── Folder Structure ─────────────────────────────── */
+.folder-structure {
+  background: var(--c-code-bg);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin: 1rem 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: var(--c-code-text);
+  box-shadow: var(--shadow);
+}
+
+.folder-structure .folder {
+  color: #67e8f9;
+  font-weight: 600;
+}
+
+.folder-structure .file {
+  color: #e2e8f0;
+}
+
+.folder-structure .comment {
+  color: #64748b;
+  font-style: italic;
 }
 
 pre {

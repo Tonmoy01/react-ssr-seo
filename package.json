@@ -1,6 +1,6 @@
 {
   "name": "react-ssr-seo-toolkit",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Framework-agnostic SEO utilities, metadata builders, structured data helpers, and React components for SSR applications",
   "keywords": [
     "seo",
@@ -24,11 +24,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Tonmoy01/react-ssr-seo.git"
+    "url": "https://github.com/Tonmoy01/react-ssr-seo-toolkit.git"
   },
   "homepage": "https://react-ssr-seo.tonmoykhan.site/",
   "bugs": {
-    "url": "https://github.com/Tonmoy01/react-ssr-seo/issues"
+    "url": "https://github.com/Tonmoy01/react-ssr-seo-toolkit/issues"
   },
   "type": "module",
   "main": "./dist/index.cjs",
@@ -79,7 +79,7 @@
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "clean": "rm -rf dist",
-    "demo": "tsx examples/dev-server/server.tsx",
+    "demo": "tsx --watch examples/dev-server/server.tsx",
     "demo:build": "tsup examples/dev-server/server.tsx --format esm --platform node --out-dir demo-dist --no-splitting --no-dts --external express --external react --external react-dom --external react/jsx-runtime",
     "demo:start": "node demo-dist/server.js"
   },
