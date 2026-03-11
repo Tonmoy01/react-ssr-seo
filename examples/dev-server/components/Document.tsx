@@ -293,13 +293,12 @@ body {
 }
 
 .nav-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
+  width: 100%;
+  padding: 0 2rem;
   display: flex;
   align-items: center;
   height: 64px;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .nav-brand {
@@ -329,6 +328,7 @@ body {
 .nav-links {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.25rem;
   flex: 1;
   overflow-x: auto;
